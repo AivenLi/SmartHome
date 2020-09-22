@@ -1,0 +1,5 @@
+<!--pages/home/smart-home/smart-home.wxml-->
+<view class="page-hd">
+  <button bindtap="sendDataToBLE">发送数据</button>
+  <view>收到的数据：{{recv}}</view>
+</view>

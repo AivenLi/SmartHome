@@ -1,0 +1,82 @@
+/* pages/home/home.wxss */
+
+.page-hd-no {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 400rpx 0;
+  color: #00bfff;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.ble-list {
+  width: 96%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.ble-item {
+  width: 90%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #ffffff;
+  margin-top: 10rpx;
+}
+
+.ble-prompt {
+  width: 200rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  font-weight: bold;
+  font-size: 32rpx;
+  color: #585858;
+}
+
+.ble-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #00bfff;
+}
+
+.ble-id {
+  font-size: 24rpx;
+  color: #a0a0a0;
+}
+
+.ble-rssi {
+  font-weight: bold;
+  font-size: 28rpx;
+}
+
+.div-line-80 {
+  margin-top: 10rpx;
+  width: 80%;
+  height: 1rpx;
+  background-color: #ededed;
+}
+
+.refresh-again {
+  width: 200rpx;
+  height: 80rpx;
+  margin-top: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20rpx;
+  background-color: #ffffff;
+  font-size: 32rpx;
+  color: #00bfff;
+  border-style: solid;
+  border-width: 1rpx;
+  border-color: #00bfff;
+}

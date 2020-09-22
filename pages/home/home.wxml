@@ -1,0 +1,27 @@
+<!--pages/home/home.wxml-->
+
+<wxs module="getColor" src="../../utils/filter.wxs"></wxs>
+
+<view wx:if="{{hasBle}}" class="page-hd">
+	<block wx:for="{{bleList}}" wx:key="deviceId">
+		<view class="ble-list" bindtap="connectBle" data-deviceid="{{item.deviceId}}">
+			<view class="ble-item">
+				<text class="ble-prompt">名称：</text>
+				<text class="ble-name">{{item.localName}}</text>
+			</view>
+			<view class="ble-item">
+				<text class="ble-prompt">DeviceID：</text>
+				<text class="ble-id">{{item.deviceId}}</text>
+			</view>
+			<view class="ble-item">
+				<text class="ble-prompt">RSSI：</text>
+				<text class="ble-rssi" style="{{getColor.rssiColor(item.RSSI)}}">{{item.RSSI}}</text>
+			</view>
+			<view class="div-line-80"></view>
+		</view>
+	</block>
+</view>
+<view wx:else class="page-hd-no">
+	<text>未找到蓝牙设备</text>
+	<button class="refresh-again">点我重试</button>
+</view>
