@@ -1,6 +1,14 @@
 //app.js
 App({
-  onLaunch: function () {
+  onLaunch: function (options) {
+    /*
+    自定义导航栏需要
+    wx.getSystemInfo({
+      success: (res) => {
+        this.globalData.height = res.statusBarHeight
+      }
+    })
+    */
     // 展示本地存储能力
     var logs = wx.getStorageSync('logs') || []
     logs.unshift(Date.now())
@@ -34,6 +42,7 @@ App({
     })
   },
   globalData: {
-    userInfo: null
+    userInfo: null,
+    height: 0,
   }
 })

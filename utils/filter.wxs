@@ -19,5 +19,5 @@ var getColor = {
 
 module.exports = {
 
-  rssiColor: getColor.rssiColor
+  rssiColor:   getColor.rssiColor,
 }

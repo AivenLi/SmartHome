@@ -21,7 +21,4 @@
 		</view>
 	</block>
 </view>
-<view wx:else class="page-hd-no">
-	<text>未找到蓝牙设备</text>
-	<button class="refresh-again">点我重试</button>
-</view>
+<error-page wx:elif="{{!hasBle && !isLoading}}" errTitle="{{errData.errTitle}}" errContent="{{errData.errContent}}" errBtn="{{errData.errBtn}}" bindtrytryAgainCallback="tryAgainCallback"></error-page>

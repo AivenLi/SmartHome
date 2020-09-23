@@ -1,0 +1,6 @@
+<!--pages/components/error-prompt/error-prompt.wxml-->
+<view class="page-hd-no">
+	<text>{{errTitle}}</text>
+  <view wx:if="{{errContent != '' }}" class="page-content">{{errContent}}</view>
+	<button class="refresh-again" bindtap="tryAgainClick">{{errBtn}}</button>
+</view>

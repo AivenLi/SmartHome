@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "首页",
   "enablePullDownRefresh": true,
-  "backgroundColor": "#d81e06",
-  "usingComponents": {}
+  "usingComponents": {
+    "error-page": "../components/error-prompt/error-prompt"
+  }
 }
