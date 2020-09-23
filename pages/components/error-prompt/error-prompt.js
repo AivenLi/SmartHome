@@ -8,10 +8,6 @@ Component({
       type: String,
       value: ""
     },
-    errContent: {
-      type: String,
-      value: ""
-    },
     errBtn: {
       type: String,
       value: ""

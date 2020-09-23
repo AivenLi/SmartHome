@@ -10,80 +10,101 @@ Page({
   data: {
     /** 搜索到的蓝牙列表 */
     bleList: [],
-    /** 适配器打开成功 */
-    openAdapter: false,
-    /** 是否搜索到蓝牙设备 */
-    hasBle: false,
-    /** 正在扫描 */
-    isLoading: false,
+    /** 适配器标识符 */
+    openAdapter: true,
+    /** 扫描状态标识符*/
+    discover: false,
+    /** 下拉刷新标志 */
+    isRefresh: false,
     /** 错误信息 */
-    errData: {}
+    errData: {
+      title: "蓝牙设备未打开，请打开蓝牙设备，如已打开，请点击重新搜索",
+      errBtn: "搜索蓝牙设备"
+    }
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad: function(options) {
+  onLoad: function (options) {
 
+    var that = this
+    wx.onBluetoothAdapterStateChange((result) => {
+
+      console.log("监听适配器状态")
+      console.log(result)
+      that.setData({
+        openAdapter: result.available,
+        discover: result.discovering
+      })
+    })
     this.openBleAdapter()
   },
 
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady: function() {
+  onReady: function () {
 
   },
 
   /**
    * 生命周期函数--监听页面显示
    */
-  onShow: function() {
+  onShow: function () {
 
   },
 
   /**
    * 生命周期函数--监听页面隐藏
    */
-  onHide: function() {
+  onHide: function () {
 
   },
 
   /**
    * 生命周期函数--监听页面卸载
    */
-  onUnload: function() {
+  onUnload: function () {
 
     wx.closeBluetoothAdapter({
-      success: function(res) {},
+      success: function (res) {},
     })
+    wx.offBluetoothAdapterStateChange(callback)
   },
 
   /**
    * 页面相关事件处理函数--监听用户下拉动作
    */
-  onPullDownRefresh: function() {
+  onPullDownRefresh: function () {
+    /**
+     * 如果正在搜索或适配器打开失败，则不搜索
+     */
+    if (this.data.discover) {
 
-    if (!this.data.isLoading) {
-
-      this.openBleAdapter()
+      console.log("正在搜索")
+      wx.stopPullDownRefresh()
     } else {
 
-      wx.stopPullDownRefresh()
+      this.setData({
+        isRefresh: true
+      })
+      wx.showNavigationBarLoading()
+      this.discoveryBLE()
     }
   },
 
   /**
    * 页面上拉触底事件的处理函数
    */
-  onReachBottom: function() {
+  onReachBottom: function () {
 
   },
 
   /**
    * 用户点击右上角分享
    */
-  onShareAppMessage: function() {
+  onShareAppMessage: function () {
 
   },
 
@@ -92,66 +113,39 @@ Page({
   /**
    * 设置适配器标志
    */
-  setOpenAdapter: function(open) {
+  setOpenAdapter: function (open) {
 
     this.setData({
       openAdapter: open
-    })
-  },
-  /**
-   * 显示正在搜索
-   */
-  showOnLoading: function() {
-
-    wx.showLoading({
-      title: '正在搜索...',
-    })
-    wx.showNavigationBarLoading()
-    this.setData({
-      isLoading: true
-    })
-  },
-
-  /**
-   * 隐藏正在搜索
-   */
-  hideOnLoading: function() {
-
-    wx.hideLoading()
-    wx.hideNavigationBarLoading()
-    wx.stopPullDownRefresh()
-    this.setData({
-      isLoading: false
     })
   },
 
   /**
    * 打开蓝牙适配器
    */
-  openBleAdapter: function() {
+  openBleAdapter: function () {
 
     var that = this
     wx.openBluetoothAdapter({
       /** 以主设备的角色 */
       mode: 'central',
       success: res => {
-        /** 初始化成功，搜索附近的蓝牙设备 */
+        console.log("打开蓝牙适配器成功")
         console.log(res)
         that.setOpenAdapter(true)
+        that.discoveryBLE()
       },
       fail: err => {
 
-        console.error("初始化蓝牙失败")
+        console.error("打开蓝牙适配器失败")
         console.error(err)
         let code = err.errCode
         if (code != 0) {
 
           that.setOpenAdapter(false)
-          that.setBLEErrorStr(code)
-          that.hideOnLoading()
         } else {
 
-          that.setOpenAdapter(false)
+          that.setOpenAdapter(true)
           that.discoveryBLE()
         }
       }
@@ -161,45 +155,45 @@ Page({
   /**
    * 发现附近的蓝牙设备
    */
-  discoveryBLE: function() {
+  discoveryBLE: function () {
 
     console.log("搜索蓝牙")
     var that = this
     wx.startBluetoothDevicesDiscovery({
 
-      services: ['FFF0'],
+     // services: ['FFF0'],
       /** 允许上报同一设备，主要用于更新设备的RSSI */
       allowDuplicatesKey: true,
       /** 立即上报设备信息 */
-      interval: 0,
+      interval: 500,
       success: res => {
         /**
-         * 当执行成功之后先获取蓝牙列表，然后再获取蓝牙设备信息，最后停止discovery
+         * 当执行成功之后先获取蓝牙列表，最后停止discovery
          */
         that.foundBLEDevices()
-        setTimeout(function() {
+        setTimeout(function () {
 
-          that.getBLEDevicesInfo()
-        }, 300)
+          console.log("停止搜索")
+          wx.stopBluetoothDevicesDiscovery({
+            success: (res) => {},
+          })
+          wx.offBluetoothDeviceFound()
+        }, 30000)
       },
       fail: err => {
 
+        console.error("搜索失败")
         console.error(err)
         let code = err.errCode
         if (code != 0) {
 
-          that.setBLEErrorStr(err.errCode)
-          that.hideOnLoading()
           wx.stopBluetoothDevicesDiscovery({
-            success: function(res) {},
+            success: function (res) {},
           })
+          wx.offBluetoothDeviceFound()
         } else {
 
           that.foundBLEDevices()
-          setTimeout(function() {
-
-            that.getBLEDevicesInfo()
-          }, 300)
         }
       }
     })
@@ -208,61 +202,53 @@ Page({
   /**
    * 监听寻找新设备的事件
    */
-  foundBLEDevices: function() {
+  foundBLEDevices: function () {
 
     var that = this
     console.log("监听查找蓝牙事件")
+    if (this.data.isRefresh) {
+
+      wx.hideNavigationBarLoading()
+      wx.stopPullDownRefresh()
+    }
     wx.onBluetoothDeviceFound((result) => {
 
+      console.log("监听事件")
+      console.log(that.data.discover)
       console.log(result)
+      that.setData({
+        bleList: result.devices
+      })
     })
   },
 
   /**
-   * 获取蓝牙设备信息
+   * 点击停止搜索事件
    */
-  getBLEDevicesInfo: function() {
+  stopDicoveryClick: function(e) {
 
     var that = this
-    var mHasBle = false
-    console.log("获取蓝牙设备信息")
-    wx.getBluetoothDevices({
+    if ( this.data.discover ) {
 
-      success: (result) => {
-
-        console.log(result)
-        let devices = result.devices
-        mHasBle = devices.length <= 0 ? false : true
+      wx.stopBluetoothDevicesDiscovery({
+        success: (res) => {
+          that.setData({
+            discover: false
+          })
+        },
+      })
+      wx.offBluetoothDeviceFound(function() {
         that.setData({
-          bleList: result.devices
+          discover: false
         })
-      },
-      fail: (err) => {
-
-        console.error(err)
-        let code = err.errCode
-        if (code != 0) {
-
-          that.setBLEErrorStr(code)
-        }
-      },
-      complete: cres => {
-
-        that.setData({
-          hasBle: mHasBle
-        })
-        if (!mHasBle) {
-
-          that.setBLEErrorStr(-2)
-        }
-      }
-    })
+      })
+    }
   },
 
   /**
    * 连接蓝牙事件
    */
-  connectBle: function(e) {
+  connectBle: function (e) {
 
     console.log("连接蓝牙")
     console.log(e)
@@ -273,9 +259,10 @@ Page({
       deviceId: mdeviceId,
       timeout: 5000,
       success: res => {
-
+        /** 连接成功，停止搜索和监听事件 */
         console.log("连接成功")
         console.log(res)
+        wx.offBluetoothDeviceFound()
         wx.stopBluetoothDevicesDiscovery({
           success: (res) => {},
         })
@@ -290,11 +277,11 @@ Page({
         let code = err.errCode
         if (code != 0) {
 
-          that.setBLEErrorStr(code)
+          wx.showToast({
+            title: bleCode.getBleErrStr(code),
+            image: "../../images/error_icon.png"
+          })
         }
-        that.setData({
-          bleConnected: false
-        })
       }
     })
   },
@@ -302,40 +289,8 @@ Page({
   /** 
    * 错误页面点击重试回调
    */
-  tryAgainCallback: function(e) {
+  tryAgainCallback: function (e) {
 
-    console.log("回调")
+    this.openBleAdapter()
   },
-
-  /**
-   * 根据蓝牙相关接口返回的错误码获取
-   * 相应的错误信息
-   */
-  setBLEErrorStr: function(code) {
-
-    var title = "errData.errTitle"
-    var content = "errData.errContent"
-    var errBtn = "errData.errBtn"
-    var eTitle = bleCode.getBleErrStr(code)
-    var mBtn = ""
-    var mContent = ""
-    /**
-     * 未打开蓝牙需要特殊处理
-     */
-    console.log("错误码 ")
-    console.log(code)
-    if (eTitle == bleCode.getBleErrStr(10001)) {
-
-      mBtn = "打开蓝牙后点我"
-      mContent = "请打开手机蓝牙，否则不能正常使用本小程序"
-    } else {
-
-      mBtn = "点我重试"
-    }
-    this.setData({
-      [title]: eTitle,
-      [content]: mContent,
-      [errBtn]: mBtn
-    })
-  }
 })

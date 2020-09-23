@@ -13,10 +13,8 @@
   font-weight: bold;
 }
 
-.page-content {
-  font-size: 24rpx;
-  color: #00bfff;
-  font-weight: bold;
+.title-text {
+  width: 80%
 }
 
 .refresh-again {

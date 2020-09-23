@@ -6,7 +6,7 @@ var getColor = {
     if ( rssi >= -50 ) {
 
       color += "00ff00"
-    } else if ( rssi >= -100 && rssi < -50 ) {
+    } else if ( rssi >= -90 && rssi < -50 ) {
 
       color += "ffa500"
     } else {

@@ -33,7 +33,7 @@ Page({
   data: {
 
     deviceId: "",
-    servicesUUID:[],
+    servicesUUID: [],
     recv: "",
     characteristicId: '0000FFE1-0000-1000-8000-00805F9B34FB',
     serviceId: '0000FFE0-0000-1000-8000-00805F9B34FB',
@@ -47,6 +47,20 @@ Page({
     var that = this
     var mDeviceId = options.deviceId
     console.log(options)
+
+    wx.onBLEConnectionStateChange((result) => {
+      if (!result.connected) {
+
+        wx.showToast({
+          title: "已断开连接",
+          image: "../../../images/error_icon.png"
+        })
+        wx.navigateBack({
+          delta: 1,
+        })
+      }
+    })
+
     this.setData({
       deviceId: options.deviceId
     })
@@ -59,9 +73,8 @@ Page({
         that.setData({
           servicesUUID: res.services
         })
-        setTimeout(function() {
+        setTimeout(function () {
           that.getBLECharaceter()
-          that.notifyBLE()
         }, 100)
       },
       fail: err => {
@@ -101,6 +114,7 @@ Page({
     wx.closeBLEConnection({
       deviceId: that.data.deviceId,
     })
+    wx.offBLEConnectionStateChange()
   },
 
   /**
@@ -124,12 +138,12 @@ Page({
 
   },
 
-  getBLECharaceter: function() {
+  getBLECharaceter: function () {
 
     var that = this
     var UUIDS = that.data.servicesUUID
     console.log("获取服务UUID")
-    for ( let i = 0, len = UUIDS.length; i < len; ++i ) {
+    for (let i = 0, len = UUIDS.length; i < len; ++i) {
 
       console.log("第" + i + "次")
       wx.getBLEDeviceCharacteristics({
@@ -138,6 +152,7 @@ Page({
         success: res => {
 
           console.log(res)
+          that.notifyBLE()
         },
         fail: err => {
 
@@ -147,7 +162,7 @@ Page({
     }
   },
 
-  notifyBLE: function() {
+  notifyBLE: function () {
 
     var that = this
     console.log("开始订阅消息")
@@ -160,7 +175,7 @@ Page({
 
         console.log("订阅消息成功")
         console.log(res)
-        that.onBLECharaecter()
+        that.readDataFromBle()
       },
       fail: err => {
 
@@ -170,18 +185,28 @@ Page({
     })
   },
 
-  onBLECharaecter: function() {
+  ab2hex: function(buffer) {
+    let hexArr = Array.prototype.map.call(
+      new Uint8Array(buffer),
+      function(bit) {
+        return ('00' + bit.toString(16)).slice(-2)
+      }
+    )
+    return hexArr.join('');
+  },
+
+  onBLECharaecter: function () {
 
     var that = this
     wx.onBLECharacteristicValueChange((result) => {
 
       console.log("接受到数据")
       console.log(result)
-      that.readDataFromBle()
+      console.log(that.ab2hex(result.value))
     })
   },
 
-  readDataFromBle: function() {
+  readDataFromBle: function () {
 
     var that = this
     wx.readBLECharacteristicValue({
@@ -192,6 +217,7 @@ Page({
 
         console.log("来自BLE消息")
         console.log(res)
+        that.onBLECharaecter()
       },
       fail: err => {
 
@@ -201,7 +227,7 @@ Page({
     })
   },
 
-  sendDataToBLE: function(e) {
+  sendDataToBLE: function (e) {
 
     var that = this
     var x = new ArrayBuffer(2)
@@ -215,10 +241,23 @@ Page({
       success: res => {
 
         console.log(res)
+        wx.readBLECharacteristicValue({
+          characteristicId: that.data.characteristicId,
+          deviceId: that.data.deviceId,
+          serviceId: that.data.serviceId,
+          success: res => {
+            console.log("读取数据")
+            console.log(res)
+          }
+        })
       },
       fail: err => {
 
         console.error(err)
+        wx.showToast({
+          title: '发送数据失败',
+          image: "../../../images/error_icon.png"
+        })
       }
     })
   },
