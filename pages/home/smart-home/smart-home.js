@@ -23,8 +23,15 @@
  *         3. 0000FFE0-0000-1000-8000-00805F9B34FB（只有一个子UUID且同时拥有读写、订阅权限，而且和
  *    汇承HC-08文档说明一致）
  *    2020-9-23 00:35:45注：可以发送消息，但是还不能接收消息。
- *    2020-9-24 00:12注：已经可以收发消息。
+ *    2020-9-24 00:12注：已经可以收发消息。流程如下：
+ *        wx.getBLEDeviceCharacteristics ==> wx.notifyBLECharacteristicValueChange ==>
+ *    wx.readBLECharacteristicValue ==> wx.onBLECharacteristicValueChange
  */
+
+ var ledP = require("../../../utils/protocol.js")
+
+ const ledOnImg  = "../../../images/led_on.png"
+ const ledOffImg = "../../../images/led_off.png"
 
 Page({
 
@@ -47,6 +54,8 @@ Page({
      *               ]
      */
     groupUUID: [],
+    /** 使用哪一组服务UUID和特征值UUID进行通信 */
+    uIndex: 0,
     /** 接收到的数据 */
     recv: "",
     /** 当前使用的蓝牙特征值UUID */
@@ -57,24 +66,26 @@ Page({
     mIsLoading: false,
     /** 连接状态 */
     connected: true,
+    /*************************************************/
+    ledOn: true,
+    ledImg: "../../../images/led_on.png",
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad: function(options) {
+  onLoad: function (options) {
 
     var that = this
-   
+
     console.log(JSON.parse(options.ble))
     this.myShowLoading("正在初始化...")
     this.setData({
       ble: JSON.parse(options.ble),
-      deviceId: ble.deviceId
+      deviceId: that.data.ble.deviceId
     })
-    var mDeviceId = this.data.deviceId
     wx.setNavigationBarTitle({
-      title: that.data.ble.name + '（已连接）',
+      title: that.data.ble.localName + '（已连接）',
     })
     /**
      * 监听蓝牙连接状态
@@ -88,7 +99,7 @@ Page({
         })
         that.myHideLoading()
         wx.setNavigationBarTitle({
-          title: that.data.ble.name + '（已断开）',
+          title: that.data.ble.localName + '（已断开）',
         })
         wx.showToast({
           title: "已断开连接",
@@ -98,16 +109,19 @@ Page({
     })
     that.myHideLoading()
     that.myShowLoading("获取服务UUID")
-    console.log("获取UUDID")
+    console.log("获取UUID")
     wx.getBLEDeviceServices({
-      deviceId: mDeviceId,
+
+      deviceId: that.data.ble.deviceId,
       success: res => {
 
         console.log(res)
         that.setData({
           servicesUUID: res.services
         })
-        setTimeout(function() {
+        console.log("得到的服务UUID")
+        console.log(that.data.servicesUUID)
+        setTimeout(function () {
           that.myHideLoading()
           that.myShowLoading("获取特征值UUID")
           that.getBLECharaceter()
@@ -128,188 +142,237 @@ Page({
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady: function() {
+  onReady: function () {
 
   },
 
   /**
    * 生命周期函数--监听页面显示
    */
-  onShow: function() {
+  onShow: function () {
 
   },
 
   /**
    * 生命周期函数--监听页面隐藏
    */
-  onHide: function() {
+  onHide: function () {
 
   },
 
   /**
    * 生命周期函数--监听页面卸载
    */
-  onUnload: function() {
+  onUnload: function () {
 
     var that = this
-    wx.closeBLEConnection({
-      deviceId: that.data.deviceId,
-    })
-    wx.offBLEConnectionStateChange()
     this.myHideLoading()
+    wx.offBLECharacteristicValueChange()
+    wx.offBLEConnectionStateChange()
+    wx.closeBLEConnection({
+      deviceId: that.data.ble.deviceId,
+    })
+    
+    
   },
 
   /**
    * 页面相关事件处理函数--监听用户下拉动作
    */
-  onPullDownRefresh: function() {
+  onPullDownRefresh: function () {
 
   },
 
   /**
    * 页面上拉触底事件的处理函数
    */
-  onReachBottom: function() {
+  onReachBottom: function () {
 
   },
 
   /**
    * 用户点击右上角分享
    */
-  onShareAppMessage: function() {
+  onShareAppMessage: function () {
 
   },
 
-  getBLECharaceter: function() {
+  getBLECharaceter: function () {
 
     var that = this
-    var UUIDS = that.data.servicesUUID
     console.log("获取服务UUID")
-    for (let i = 0, len = UUIDS.length; i < len; ++i) {
+    var gIndex = 0
+    for (let i = 0, len = that.data.servicesUUID.length; i < len; ++i) {
 
-      console.log("第" + i + "次")
-      wx.getBLEDeviceCharacteristics({
-        deviceId: that.data.deviceId,
-        serviceId: UUIDS[i].uuid,
-        success: res => {
+      if (that.data.servicesUUID[i].isPrimary) {
 
-          console.log(res)
-          for (let j = 0, clen = res.characteristics; j < clen; ++j) {
+        console.log("第" + i + "次")
+        wx.getBLEDeviceCharacteristics({
 
-            let read = res.characteristics[j].properties.read
-            let write = res.characteristics[j].properties.write
-            let notify = res.characteristics[j].properties.notify
-            if (read && write && notify) {
+          deviceId: that.data.ble.deviceId,
+          serviceId: that.data.servicesUUID[i].uuid,
+          success: res => {
 
-              let avaUUID = that.data.UUIDS
-              avaUUID.push(res.characteristics[i])
-              that.setData({
-                UUIDS: avaUUID,
-                //serviceId: UUIDS[i].uuid,
-                //characteristicId: res.characteristics[j].uuid
-              })
+            console.log(res)
+            for (let j = 0, clen = res.characteristics.length; j < clen; ++j) {
+
+              let read = res.characteristics[j].properties.read
+              let write = res.characteristics[j].properties.write
+              let notify = res.characteristics[j].properties.notify
+              let groupCSUUID = "groupUUID[" + gIndex + "].SUUID"
+              let groupCCUUID = "groupUUID[" + gIndex + "].CUUID"
+              console.log("读写订阅" + read + "," + write + "," + notify)
+              if (read && write && notify) {
+
+                that.setData({
+
+                  [groupCCUUID]: res.characteristics[j].uuid,
+                  [groupCSUUID]: that.data.servicesUUID[i].uuid
+                  //serviceId: UUIDS[i].uuid,
+                  //characteristicId: res.characteristics[j].uuid
+                })
+                gIndex += 1
+                console.log("得到的特征值UUID")
+                console.log(that.data.groupUUID)
+              }
             }
+            if (i === (len - 1)) {
+
+              console.log("可用的UUID")
+              console.log(that.data.groupUUID)
+              that.myHideLoading()
+              if (that.data.groupUUID.length <= 0) {
+
+                that.myShowToast("无可用的UUID")
+              } else {
+
+                that.notifyBLE(that.data.uIndex)
+              }
+            }
+          },
+          fail: err => {
+
+            console.log("读取特征值UUID错误")
+            console.error(err)
           }
-        },
-        fail: err => {
-
-          console.error(err)
-        }
-      })
-    }
-    that.myHideLoading()
-    if ( that.data.UUIDS.length <= 0 ) {
-
-      that.myShowToast("无可用的UUID")
-    } else {
-
-      that.notifyBLE(0)
+        })
+      }
     }
   },
 
-  notifyBLE: function(mIndex) {
+  notifyBLE: function (mIndex) {
 
     var that = this
+    that.myShowLoading("开始订阅消息" + mIndex)
     console.log("开始订阅消息")
     wx.notifyBLECharacteristicValueChange({
-      characteristicId: that.data.UUIDS[mIndex].characteristicId,
-      deviceId: that.data.deviceId,
-      serviceId: that.data.serviceId,
+      characteristicId: that.data.groupUUID[mIndex].CUUID,
+      deviceId: that.data.ble.deviceId,
+      serviceId: that.data.groupUUID[mIndex].SUUID,
       state: true,
       success: res => {
 
         console.log("订阅消息成功")
         console.log(res)
+        that.myHideLoading()
+        wx.showToast({
+          title: '订阅成功',
+        })
+        setTimeout(function() {
+          that.sendDataToBLE(ledP.getLedStatus())
+        }, 100)
         that.readDataFromBle()
       },
       fail: err => {
 
+        that.myHideLoading()
         console.log("订阅消息失败")
         console.log(err)
+        if ( mIndex <= ( that.data.groupUUID.length-1) ) {
+
+          that.setData({
+            uIndex: that.data.uIndex + 1
+          })
+          that.notifyBLE(that.data.uIndex)
+        }
       }
     })
   },
 
-  ab2hex: function(buffer) {
-    let hexArr = Array.prototype.map.call(
-      new Uint8Array(buffer),
-      function(bit) {
-        return ('00' + bit.toString(16)).slice(-2)
+  readDataFromBle: function () {
+
+    var that = this
+    var uIndex = that.data.uIndex
+    wx.readBLECharacteristicValue({
+      characteristicId: that.data.groupUUID[uIndex].CUUID,
+      deviceId: that.data.ble.deviceId,
+      serviceId: that.data.groupUUID[uIndex].SUUID,
+      success: res => {
+
+        console.log("来自BLE消息（成功）")
+        console.log(res)
+        that.onBLECharaecter()
+      },
+      fail: err => {
+
+        console.error("来自BLE消息（失败）")
+        console.error(err)
       }
-    )
-    return hexArr.join('');
+    })
   },
 
-  onBLECharaecter: function() {
+  onBLECharaecter: function () {
 
     var that = this
     wx.onBLECharacteristicValueChange((result) => {
 
       console.log("接受到数据")
       console.log(result)
-      console.log(that.ab2hex(result.value))
+      console.log(ledP.parseData(result.value))
     })
   },
 
-  readDataFromBle: function() {
+  /**
+   * 改变LED状态
+   */
+  changeLedStatus: function(e) {
 
-    var that = this
-    wx.readBLECharacteristicValue({
-      characteristicId: that.data.characteristicId,
-      deviceId: that.data.deviceId,
-      serviceId: that.data.serviceId,
-      success: res => {
+    var status = !this.data.ledOn;
+    if ( status ) {
+      this.setData({
+        ledImg: ledOnImg
+      })
+    } else {
 
-        console.log("来自BLE消息")
-        console.log(res)
-        that.onBLECharaecter()
-      },
-      fail: err => {
-
-        console.error("来自BLE消息")
-        console.error(err)
-      }
+      this.setData({
+        ledImg: ledOffImg
+      })
+    }
+    this.setData({
+      ledOn: status
     })
+    this.sendDataToBLE(ledP.setLedStatus(status, 0))
   },
 
-  sendDataToBLE: function(e) {
+  /**
+   * 发送数据给蓝牙设备
+   */
+  sendDataToBLE: function (ledProtocolData) {
 
     var that = this
-    var x = new ArrayBuffer(2)
-    var dataView = new DataView(x)
-    dataView.setUint8(0, 49)
+    var uIndex = that.data.uIndex
     wx.writeBLECharacteristicValue({
-      characteristicId: that.data.characteristicId,
-      deviceId: that.data.deviceId,
-      serviceId: that.data.serviceId,
-      value: x,
+      characteristicId: that.data.groupUUID[uIndex].CUUID,
+      deviceId: that.data.ble.deviceId,
+      serviceId: that.data.groupUUID[uIndex].SUUID,
+      value: ledProtocolData,
       success: res => {
 
         console.log(res)
         wx.readBLECharacteristicValue({
-          characteristicId: that.data.characteristicId,
-          deviceId: that.data.deviceId,
-          serviceId: that.data.serviceId,
+          characteristicId: that.data.groupUUID[uIndex].CUUID,
+          deviceId: that.data.ble.deviceId,
+          serviceId: that.data.groupUUID[uIndex].SUUID,
           success: res => {
             console.log("读取数据")
             console.log(res)
@@ -327,7 +390,7 @@ Page({
   /**
    * 弹窗提示
    */
-  myShowToast: function(mTitle) {
+  myShowToast: function (mTitle) {
 
     wx.showToast({
       title: mTitle,
@@ -337,9 +400,9 @@ Page({
   /**
    * 显示加载框框
    */
-  myShowLoading: function(mTitle) {
+  myShowLoading: function (mTitle) {
 
-    if (!that.data.mIsLoading) {
+    if (!this.data.mIsLoading) {
 
       wx.showLoading({
         title: mTitle,
@@ -353,7 +416,7 @@ Page({
   /**
    * 隐藏加载框框
    */
-  myHideLoading: function() {
+  myHideLoading: function () {
 
     if (this.data.mIsLoading) {
 

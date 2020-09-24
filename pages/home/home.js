@@ -256,7 +256,7 @@ Page({
     console.log("连接蓝牙")
     console.log(e)
     var that = this
-    var mdeviceId = e.currentTarget.dataset.item.deviceid
+    var mdeviceId = e.currentTarget.dataset.item.deviceId
     console.log(mdeviceId)
     wx.createBLEConnection({
       deviceId: mdeviceId,

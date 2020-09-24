@@ -1,5 +1,10 @@
 <!--pages/home/smart-home/smart-home.wxml-->
-<view class="page-hd">
-  <button bindtap="sendDataToBLE">发送数据</button>
-  <view>收到的数据：{{recv}}</view>
+<view class="pages">
+  <view class="led-bd" bindtap="changeLedStatus">
+    <image class="led-img" src="{{ledImg}}"></image>
+    <view class="led-text-bd">
+    <text class="led-text-p">状态：</text>
+    <text class="led-text" style="color: #{{ledOn ? '00bfff' : '585858'}}">{{ledOn ? 'ON' : 'OFF'}}</text>
+    </view>
+  </view>
 </view>
