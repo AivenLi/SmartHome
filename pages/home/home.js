@@ -250,10 +250,13 @@ Page({
    */
   connectBle: function (e) {
 
+    wx.showLoading({
+      title: '正在连接',
+    })
     console.log("连接蓝牙")
     console.log(e)
     var that = this
-    var mdeviceId = e.currentTarget.dataset.deviceid
+    var mdeviceId = e.currentTarget.dataset.item.deviceid
     console.log(mdeviceId)
     wx.createBLEConnection({
       deviceId: mdeviceId,
@@ -267,7 +270,7 @@ Page({
           success: (res) => {},
         })
         wx.navigateTo({
-          url: './smart-home/smart-home?deviceId=' + mdeviceId,
+          url: './smart-home/smart-home?ble=' + JSON.stringify(e.currentTarget.dataset.item),
         })
       },
       fail: err => {
@@ -282,6 +285,10 @@ Page({
             image: "../../images/error_icon.png"
           })
         }
+      },
+      complete: cres => {
+
+        wx.hideLoading()
       }
     })
   },

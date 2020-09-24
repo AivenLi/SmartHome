@@ -23,6 +23,7 @@
  *         3. 0000FFE0-0000-1000-8000-00805F9B34FB（只有一个子UUID且同时拥有读写、订阅权限，而且和
  *    汇承HC-08文档说明一致）
  *    2020-9-23 00:35:45注：可以发送消息，但是还不能接收消息。
+ *    2020-9-24 00:12注：已经可以收发消息。
  */
 
 Page({
@@ -31,39 +32,72 @@ Page({
    * 页面的初始数据
    */
   data: {
-
+    /** 当前连接的ble设备信息（name，deviceId， RSSI） */
+    ble: {},
+    /** 设备ID，由底层页面传递 */
     deviceId: "",
+    /** 蓝牙服务UUID列表 */
     servicesUUID: [],
+    /** 
+     * 可用的特征值UUID，可用是指read、write和notify均为true。
+     * groupUUID结构：
+     *               [
+     *                  { SUUID: "123", CUUID: "321"},
+     *                  { SUUID: "456", CUUID: "654"}
+     *               ]
+     */
+    groupUUID: [],
+    /** 接收到的数据 */
     recv: "",
+    /** 当前使用的蓝牙特征值UUID */
     characteristicId: '0000FFE1-0000-1000-8000-00805F9B34FB',
+    /** 蓝牙特征值对应服务的UUID */
     serviceId: '0000FFE0-0000-1000-8000-00805F9B34FB',
+    /** 正在显示加载框框 */
+    mIsLoading: false,
+    /** 连接状态 */
+    connected: true,
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad: function (options) {
+  onLoad: function(options) {
 
     var that = this
-    var mDeviceId = options.deviceId
-    console.log(options)
-
+   
+    console.log(JSON.parse(options.ble))
+    this.myShowLoading("正在初始化...")
+    this.setData({
+      ble: JSON.parse(options.ble),
+      deviceId: ble.deviceId
+    })
+    var mDeviceId = this.data.deviceId
+    wx.setNavigationBarTitle({
+      title: that.data.ble.name + '（已连接）',
+    })
+    /**
+     * 监听蓝牙连接状态
+     */
     wx.onBLEConnectionStateChange((result) => {
+
       if (!result.connected) {
 
+        that.setData({
+          connected: false
+        })
+        that.myHideLoading()
+        wx.setNavigationBarTitle({
+          title: that.data.ble.name + '（已断开）',
+        })
         wx.showToast({
           title: "已断开连接",
           image: "../../../images/error_icon.png"
         })
-        wx.navigateBack({
-          delta: 1,
-        })
       }
     })
-
-    this.setData({
-      deviceId: options.deviceId
-    })
+    that.myHideLoading()
+    that.myShowLoading("获取服务UUID")
     console.log("获取UUDID")
     wx.getBLEDeviceServices({
       deviceId: mDeviceId,
@@ -73,12 +107,19 @@ Page({
         that.setData({
           servicesUUID: res.services
         })
-        setTimeout(function () {
+        setTimeout(function() {
+          that.myHideLoading()
+          that.myShowLoading("获取特征值UUID")
           that.getBLECharaceter()
         }, 100)
       },
       fail: err => {
 
+        that.myHideLoading()
+        wx.showToast({
+          title: err.errMsg,
+          image: "../../../images/error_icon.png"
+        })
         console.error(err)
       }
     })
@@ -87,58 +128,59 @@ Page({
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady: function () {
+  onReady: function() {
 
   },
 
   /**
    * 生命周期函数--监听页面显示
    */
-  onShow: function () {
+  onShow: function() {
 
   },
 
   /**
    * 生命周期函数--监听页面隐藏
    */
-  onHide: function () {
+  onHide: function() {
 
   },
 
   /**
    * 生命周期函数--监听页面卸载
    */
-  onUnload: function () {
+  onUnload: function() {
 
     var that = this
     wx.closeBLEConnection({
       deviceId: that.data.deviceId,
     })
     wx.offBLEConnectionStateChange()
+    this.myHideLoading()
   },
 
   /**
    * 页面相关事件处理函数--监听用户下拉动作
    */
-  onPullDownRefresh: function () {
+  onPullDownRefresh: function() {
 
   },
 
   /**
    * 页面上拉触底事件的处理函数
    */
-  onReachBottom: function () {
+  onReachBottom: function() {
 
   },
 
   /**
    * 用户点击右上角分享
    */
-  onShareAppMessage: function () {
+  onShareAppMessage: function() {
 
   },
 
-  getBLECharaceter: function () {
+  getBLECharaceter: function() {
 
     var that = this
     var UUIDS = that.data.servicesUUID
@@ -152,7 +194,22 @@ Page({
         success: res => {
 
           console.log(res)
-          that.notifyBLE()
+          for (let j = 0, clen = res.characteristics; j < clen; ++j) {
+
+            let read = res.characteristics[j].properties.read
+            let write = res.characteristics[j].properties.write
+            let notify = res.characteristics[j].properties.notify
+            if (read && write && notify) {
+
+              let avaUUID = that.data.UUIDS
+              avaUUID.push(res.characteristics[i])
+              that.setData({
+                UUIDS: avaUUID,
+                //serviceId: UUIDS[i].uuid,
+                //characteristicId: res.characteristics[j].uuid
+              })
+            }
+          }
         },
         fail: err => {
 
@@ -160,14 +217,22 @@ Page({
         }
       })
     }
+    that.myHideLoading()
+    if ( that.data.UUIDS.length <= 0 ) {
+
+      that.myShowToast("无可用的UUID")
+    } else {
+
+      that.notifyBLE(0)
+    }
   },
 
-  notifyBLE: function () {
+  notifyBLE: function(mIndex) {
 
     var that = this
     console.log("开始订阅消息")
     wx.notifyBLECharacteristicValueChange({
-      characteristicId: that.data.characteristicId,
+      characteristicId: that.data.UUIDS[mIndex].characteristicId,
       deviceId: that.data.deviceId,
       serviceId: that.data.serviceId,
       state: true,
@@ -195,7 +260,7 @@ Page({
     return hexArr.join('');
   },
 
-  onBLECharaecter: function () {
+  onBLECharaecter: function() {
 
     var that = this
     wx.onBLECharacteristicValueChange((result) => {
@@ -206,7 +271,7 @@ Page({
     })
   },
 
-  readDataFromBle: function () {
+  readDataFromBle: function() {
 
     var that = this
     wx.readBLECharacteristicValue({
@@ -227,7 +292,7 @@ Page({
     })
   },
 
-  sendDataToBLE: function (e) {
+  sendDataToBLE: function(e) {
 
     var that = this
     var x = new ArrayBuffer(2)
@@ -254,11 +319,48 @@ Page({
       fail: err => {
 
         console.error(err)
-        wx.showToast({
-          title: '发送数据失败',
-          image: "../../../images/error_icon.png"
-        })
+        that.myShowToast("发送数据失败")
       }
     })
   },
+
+  /**
+   * 弹窗提示
+   */
+  myShowToast: function(mTitle) {
+
+    wx.showToast({
+      title: mTitle,
+      image: "../../../images/error_icon.png"
+    })
+  },
+  /**
+   * 显示加载框框
+   */
+  myShowLoading: function(mTitle) {
+
+    if (!that.data.mIsLoading) {
+
+      wx.showLoading({
+        title: mTitle,
+      })
+      this.setData({
+        mIsLoading: true
+      })
+    }
+  },
+
+  /**
+   * 隐藏加载框框
+   */
+  myHideLoading: function() {
+
+    if (this.data.mIsLoading) {
+
+      wx.hideLoading()
+      this.setData({
+        mIsLoading: false
+      })
+    }
+  }
 })

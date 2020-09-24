@@ -4,7 +4,7 @@
 
 <view wx:if="{{openAdapter}}" class="page-hd">
 	<block wx:for="{{bleList}}" wx:key="deviceId">
-		<view class="ble-list" bindtap="connectBle" data-deviceid="{{item.deviceId}}">
+		<view class="ble-list" bindtap="connectBle" data-item="{{item}}">
 			<view class="ble-item">
 				<text class="ble-prompt">名称：</text>
 				<text class="ble-value" style="color: #00bfff">{{item.localName}}</text>
