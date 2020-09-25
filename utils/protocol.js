@@ -4,28 +4,71 @@
  * 基于BLE的智能家居控制协议
  */
 
-var ledProtocol = new ArrayBuffer(4)
-var dataView    = new DataView(ledProtocol)
+var ledProtocol = new ArrayBuffer(5)
+var dataView = new DataView(ledProtocol)
 dataView.setUint8(0, 4)
-dataView.setUint8(2, 48)
-dataView.setUint8(3, 8)
+dataView.setUint8(2, 0)
+dataView.setUint8(3, 0)
+dataView.setUint8(4, 8)
 
- /**
-  * @param {boolean} ledStatus led的状态，true亮，false灭
-  * @param {timing} timing 定时关闭/开启，0表示不定时，单位为分钟
-  * @return led的控制协议数据
-  */
-function mySetLedStatus(ledStatus, timing) {
+/**
+ * @param {boolean} status led的状态，true亮，false灭
+ * @return led的控制协议数据
+ */
+function mySetLedStatus(status) {
 
-    dataView.setUint8(1, ledStatus ? 49 : 48)
-    dataView.setUint8(2, timing <= 0 ? 48 : timing > 255 ? 255 : timing)
-    return ledProtocol
+  dataView.setUint8(1, status ? 49 : 48)
+  dataView.setUint8(2, 0)
+  dataView.setUint8(3, 0)
+  return ledProtocol
+}
+
+/**
+ * @brief 设置定时器
+ * @param {boolean} status 定时到之后的动作
+ * @param {number} timing 定时时长
+ */
+function mySetTimingCloseLed(status, timing) {
+
+  let hightBit = 0
+  let lowBit   = 0
+  if (timing > 65535) {
+
+    hightBit = lowBit = 255
+  } else if ( timing > 255 ) {
+
+    lowBit   = 255
+    hightBit = parseInt(timing / 256) + ( timing % 256 )
+  } else if ( timing <= 0 ) {
+
+    hightBit = lowBit = 0
+  } else {
+
+    lowBit   = timing
+    hightBit = 0
+  }
+  dataView.setUint8(1, status ? 51 : 50)
+  dataView.setUint8(2, 7);
+  dataView.setUint8(3, 8);
+  return ledProtocol
+}
+
+/**
+ * 取消定时任务
+ */
+function myCancelTiming() {
+
+  dataView.setUint8(1, 52);
+  dataView.setUint8(2, 0);
+  dataView.setUint8(3, 0)
+  return ledProtocol;
 }
 
 function myGetLedStatus() {
 
-  dataView.setUint8(1, 50)
-  dataView.setUint8(2, 48)
+  dataView.setUint8(1, 53)
+  dataView.setUint8(2, 0)
+  dataView.setUint8(3, 0)
   return ledProtocol
 }
 
@@ -49,5 +92,7 @@ module.exports = {
 
   setLedStatus: mySetLedStatus,
   getLedStatus: myGetLedStatus,
-  parseData:    parseLedProtocolData,
+  setTiming: mySetTimingCloseLed,
+  cancelTiming: myCancelTiming,
+  parseData: parseLedProtocolData,
 }

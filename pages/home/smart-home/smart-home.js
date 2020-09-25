@@ -28,10 +28,7 @@
  *    wx.readBLECharacteristicValue ==> wx.onBLECharacteristicValueChange
  */
 
- var ledP = require("../../../utils/protocol.js")
-
- const ledOnImg  = "../../../images/led_on.png"
- const ledOffImg = "../../../images/led_off.png"
+var ledP = require("../../../utils/protocol.js")
 
 Page({
 
@@ -56,8 +53,6 @@ Page({
     groupUUID: [],
     /** 使用哪一组服务UUID和特征值UUID进行通信 */
     uIndex: 0,
-    /** 接收到的数据 */
-    recv: "",
     /** 当前使用的蓝牙特征值UUID */
     characteristicId: '0000FFE1-0000-1000-8000-00805F9B34FB',
     /** 蓝牙特征值对应服务的UUID */
@@ -67,8 +62,11 @@ Page({
     /** 连接状态 */
     connected: true,
     /*************************************************/
-    ledOn: true,
-    ledImg: "../../../images/led_on.png",
+    ledOn: false,
+    ledOnImg: "../../../images/led_on.png",
+    ledOffImg: "../../../images/led_off.png",
+    hasTiming: false,
+    timingSeconds: 0,
   },
 
   /**
@@ -172,8 +170,8 @@ Page({
     wx.closeBLEConnection({
       deviceId: that.data.ble.deviceId,
     })
-    
-    
+
+
   },
 
   /**
@@ -278,7 +276,7 @@ Page({
         wx.showToast({
           title: '订阅成功',
         })
-        setTimeout(function() {
+        setTimeout(function () {
           that.sendDataToBLE(ledP.getLedStatus())
         }, 100)
         that.readDataFromBle()
@@ -288,7 +286,7 @@ Page({
         that.myHideLoading()
         console.log("订阅消息失败")
         console.log(err)
-        if ( mIndex <= ( that.data.groupUUID.length-1) ) {
+        if (mIndex <= (that.data.groupUUID.length - 1)) {
 
           that.setData({
             uIndex: that.data.uIndex + 1
@@ -327,31 +325,73 @@ Page({
     wx.onBLECharacteristicValueChange((result) => {
 
       console.log("接受到数据")
-      console.log(result)
-      console.log(ledP.parseData(result.value))
+      var ledData = ledP.parseData(result.value).split(",");
+      console.log(ledData)
+      if (ledData.length == 5 && ledData[0] == "04" && ledData[4] == "08") {
+
+        var cmd = ledData[1]
+        if (cmd == "00") {
+
+          that.setData({
+            ledOn: false
+          })
+        } else if (cmd == "01") {
+
+          that.setData({
+            ledOn: true
+          })
+        } else if (cmd == "32" || cmd == "33") {
+
+          var h = parseInt(ledData[2], 16)
+          var l = parseInt(ledData[3], 16)
+          var s = parseInt(( h * 256 + l ))
+          that.setData({
+            timingSeconds: s,
+            hasTiming: true
+          })
+        } else if (cmd == "34") {
+
+          wx.showToast({
+            title: '取消定时任务',
+          })
+          that.setData({
+            hasTiming: false
+          })
+        }
+      }
     })
   },
 
   /**
    * 改变LED状态
    */
-  changeLedStatus: function(e) {
+  changeLedStatus: function (e) {
 
     var status = !this.data.ledOn;
-    if ( status ) {
-      this.setData({
-        ledImg: ledOnImg
-      })
-    } else {
-
-      this.setData({
-        ledImg: ledOffImg
-      })
-    }
     this.setData({
       ledOn: status
     })
-    this.sendDataToBLE(ledP.setLedStatus(status, 0))
+    this.sendDataToBLE(ledP.setLedStatus(status))
+  },
+
+  /**
+   * 开启定时器
+   */
+  startTimingClick: function (e) {
+
+    this.sendDataToBLE(ledP.setTiming(false, 60 * 10))
+    this.setData({
+      hasTiming: true
+    })
+  },
+
+  /**
+   * 取消定时
+   * @param {any} e 
+   */
+  stopTimingClick: function (e) {
+
+    this.sendDataToBLE(ledP.cancelTiming())
   },
 
   /**

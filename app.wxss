@@ -8,10 +8,3 @@
   justify-content: flex-start;
   align-items: flex-start;
 }
-
-/**app.wxss**/
-pages {
-  position: relative;
-  z-index: 9999998;
-  background: #fff;
-}

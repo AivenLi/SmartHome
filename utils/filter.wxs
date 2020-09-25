@@ -1,12 +1,12 @@
 var getColor = {
 
-  rssiColor: function(rssi) {
+  rssiColor: function (rssi) {
 
     var color = "color: #"
-    if ( rssi >= -50 ) {
+    if (rssi >= -50) {
 
       color += "00ff00"
-    } else if ( rssi >= -90 && rssi < -50 ) {
+    } else if (rssi >= -90 && rssi < -50) {
 
       color += "ffa500"
     } else {
@@ -17,7 +17,33 @@ var getColor = {
   }
 }
 
+var hexUtils = {
+
+  hextonum: function (hexToDecimalism) {
+
+    console.log("转换时间*******")
+    var trimedStr = hexToDecimalism.trim();
+    var rawStr = trimedStr.substr(0, 2).toLowerCase() === "0x" ? trimedStr.substr(2) : trimedStr;
+    var len = rawStr.length;
+    if (len % 2 !== 0) {
+      console.log("存在非法字符!");
+      return "";
+    }
+    var curCharCode;
+    var resultStr = [];
+    for (var i = 0; i < len; i = i + 2) {
+      curCharCode = parseInt(rawStr.substr(i, 2), 16);
+      resultStr.push(parseInt(curCharCode));
+    }
+     console.log('转换后十进制：', resultStr);
+    var resNumber = resultStr[0] * 256 + resultStr[1]
+    console.log('数字：', resNumber)
+    return resNumber;
+  }
+}
+
 module.exports = {
 
-  rssiColor:   getColor.rssiColor,
+  rssiColor: getColor.rssiColor,
+  hexToNumber: hexUtils.hextonum
 }

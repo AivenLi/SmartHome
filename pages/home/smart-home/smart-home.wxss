@@ -1,6 +1,6 @@
 /* pages/home/smart-home/smart-home.wxss */
 
-.pages {
+.pages-ble {
   width: 100%;
   height: 100%;
   display: flex;
@@ -10,13 +10,23 @@
 }
 
 .led-bd {
-  margin-top: 400rpx;
+  margin-top: 200rpx;
   width: 300rpx;
   height: 300rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+}
+
+.led-control {
+  margin-top: 400rpx;
+  width: 100%;
+  height: 300rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .led-img {
@@ -33,4 +43,62 @@
   font-size: 32rpx;
   font-weight: bold;
   color: #585858;
+}
+
+.timing-bd {
+  margin-top: -50rpx;
+  width: 100%;
+  height: 50rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.timing-second {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #d81e06;
+}
+
+.timing-second-p {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #585858;
+}
+
+.start-timing {
+  margin-top: 10rpx;
+  width: 200rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20rpx;
+  background-color: #ffffff;
+  font-size: 32rpx;
+  color: #00ff00;
+  border-style: solid;
+  border-width: 1rpx;
+  border-color: #00ff00;
+  position: absolute;
+  z-index: 100;
+}
+
+.stop-timing {
+  margin-top: 100rpx;
+  width: 200rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20rpx;
+  background-color: #ffffff;
+  font-size: 32rpx;
+  color: #d81e06;
+  border-style: solid;
+  border-width: 1rpx;
+  border-color: #d81e06;
+  position: absolute;
+  z-index: 100;
 }
