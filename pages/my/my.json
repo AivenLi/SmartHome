@@ -1,5 +1,7 @@
 {
   "navigationBarTitleText": "个人中心",
   "usingComponents": {
+    "led": "../home/components/led/led",
+    "debug": "../home/components/debug/debug"
   }
 }

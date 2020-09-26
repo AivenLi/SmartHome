@@ -161,7 +161,7 @@ Page({
     var that = this
     wx.startBluetoothDevicesDiscovery({
 
-     // services: ['FFF0'],
+      //services: ['FFF0'],
       /** 允许上报同一设备，主要用于更新设备的RSSI */
       allowDuplicatesKey: true,
       /** 立即上报设备信息 */

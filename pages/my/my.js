@@ -6,14 +6,36 @@ Page({
    * 页面的初始数据
    */
   data: {
-   
+
+    swiperParam: {
+      duration: 300,
+      current: 0,
+    },
+    tabbar: [
+      {
+        title: "LED",
+        index: 0
+      }, {
+        title: "调试",
+        index: 1
+      }
+    ],
+    clientHeight: 0,
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad: function (options) {
-
+/*
+    var that = this
+    wx.getSystemInfo({
+      success: function (res) {
+        that.setData({
+          clientHeight: res.windowHeight - 177
+        })
+      },
+    })*/
   },
 
   /**
@@ -63,5 +85,23 @@ Page({
    */
   onShareAppMessage: function () {
 
+  },
+
+  tabbarClick: function(e) {
+
+    this.setCurrentTab(e.currentTarget.dataset.index)
+  },
+
+  swiperChange: function(e) {
+
+    this.setCurrentTab(e.detail.current)
+  },
+
+  setCurrentTab: function(index) {
+
+    var current = "swiperParam.current"
+    this.setData({
+      [current]: index
+    })
   }
 })

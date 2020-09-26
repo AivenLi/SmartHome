@@ -69,3 +69,8 @@
   position: absolute;
   z-index: 100;
 }
+
+.hover-class {
+  background-color: #ededed; 
+  opacity: 0.5;
+}

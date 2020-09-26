@@ -1,1 +1,47 @@
 /* pages/my/my.wxss */
+
+.page-head {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.tabbar {
+  width: 96%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10rpx;
+}
+
+.tabbar-item {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.tabbar-title {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.tabbar-line {
+  background-color: #00bfff;
+  width: 60rpx;
+  height: 5rpx;
+  border-radius: 20rpx;
+  margin-top: 10rpx;
+}
+
+.swiper-class {
+  margin-top: 10rpx;
+  width: 100%;
+  height: 100%;
+  display: block;
+}

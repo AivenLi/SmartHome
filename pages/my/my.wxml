@@ -1,2 +1,24 @@
 <!--pages/my/my.wxml-->
 
+<view class="page-head">
+  <view class="tabbar">
+    <block wx:for="{{tabbar}}" wx:key="index">
+      <view class="tabbar-item" bindtap="tabbarClick" data-index="{{item.index}}">
+        <view class="tabbar-title" style="color: #{{swiperParam.current == item.index ? '00bfff' : '787878'}}">{{item.title}}</view>
+        <view class="{{swiperParam.current == item.index ? 'tabbar-line' : ''}}"></view>
+      </view>
+    </block>
+  </view>
+	<swiper class="swiper-class" style="height: 1000rpx;" duration="{{swiperParam.duration}}" current="{{swiperParam.current}}" bindtap="swiperChange">
+		<swiper-item>
+			<scroll-view scroll-y="{{true}}">
+        <led status="" timing="" seconds="321" action="0"></led>
+      </scroll-view>
+		</swiper-item>
+		<swiper-item>
+			<scroll-view scroll-y="{{true}}" style="height:1000rpx;">
+        <debug></debug>>
+      </scroll-view>
+		</swiper-item>
+	</swiper>
+</view>

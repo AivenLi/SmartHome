@@ -2,6 +2,8 @@
 
 <wxs module="hexUtil" src="../../../utils/filter.wxs"/>
 
+
+
 <view class="pages-ble">
 	<view class="led-bd" bindtap="changeLedStatus">
 		<image class="led-img" src="{{ledOn ? ledOnImg : ledOffImg}}"></image>
