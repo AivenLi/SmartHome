@@ -2,22 +2,25 @@
 
 <wxs module="hexUtil" src="../../../utils/filter.wxs"/>
 
-
-
-<view class="pages-ble">
-	<view class="led-bd" bindtap="changeLedStatus">
-		<image class="led-img" src="{{ledOn ? ledOnImg : ledOffImg}}"></image>
-		<view class="led-text-bd">
-			<text class="led-text-p">状态：</text>
-			<text class="led-text" style="color: #{{ledOn ? '00bfff' : '585858'}}">{{ledOn ? 'ON' : 'OFF'}}</text>
-		</view>
-	</view>
-	<view class="led-control">
-		<view wx:if="{{hasTiming}}" class="timing-bd">
-			<text class="timing-second">{{timingSeconds}}</text>
-			<text class="timing-second-p">秒后关灯</text>
-		</view>
-		<button class="start-timing" bindtap="startTimingClick">定时关闭</button>
-		<button wx:if="{{hasTiming}}" class="stop-timing" bindtap="stopTimingClick">取消定时</button>
-	</view>
+<view class="page-head">
+  <view class="tabbar">
+    <block wx:for="{{tabbar}}" wx:key="index">
+      <view class="tabbar-item" bindtap="tabbarClick" data-index="{{item.index}}">
+        <view class="tabbar-title" style="color: #{{current == item.index ? '00bfff' : '787878'}}">{{item.title}}</view>
+        <view class="{{current == item.index ? 'tabbar-line' : ''}}"></view>
+      </view>
+    </block>
+  </view>
+	<swiper class="swiper-class" style="height: 1000rpx;" duration="{{duration}}" current="{{current}}" bindchange="swiperChange" >
+		<swiper-item>
+			<scroll-view scroll-y="{{true}}">
+        <led status="" timing="" seconds="321" action="0"></led>
+      </scroll-view>
+		</swiper-item>
+		<swiper-item>
+			<scroll-view scroll-y="{{true}}" style="height:1000rpx;">
+        <debug></debug>>
+      </scroll-view>
+		</swiper-item>
+	</swiper>
 </view>

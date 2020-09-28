@@ -9,18 +9,18 @@
 	</view>
 	<view class="led-div-line"></view>
 	<view class="led-control">
-		<picker style="width: 330rpx;" bindchange="selectClosePicker" value="{{timeClose}}" mode="time" start="00:00" end="23:59">
+		<picker style="width: 430rpx;" bindchange="selectClosePicker" value="{{timeClose}}" mode="multiSelector" range="{{timer}}" range-key="time">
 			<view class="control-btn" hover-class="hover-class" style="background-color: #787878;">
         <text>定时关灯</text>
         <text wx:if="{{timing && action == 0}}">（ {{seconds}} S ）</text>
       </view>
 		</picker>
-		<picker style="width: 330rpx;" bindchange="selectOpenePicker" value="{{timeOpen}}" mode="time" start="00:00" end="23:59">
+		<picker style="width: 430rpx;" bindchange="selectOpenPicker" value="{{timeOpen}}" mode="multiSelector" range="{{timer}}" range-key="time">
 			<view class="control-btn" hover-class="hover-class" style="background-color: #00bfff;">
         <text>定时开灯</text>
         <text wx:if="{{timing && action == 1}}">（ {{seconds}} S ）</text>
       </view>
 		</picker>
-		<button hover-class="hover-class" class="control-btn" style="background-color: #00ff00;" catchtap="stopTimingClick">取消定时</button>
+		<button hover-class="hover-class" class="control-btn" style="background-color: #00ff00;width: 430rpx;" catchtap="stopTimingClick">取消定时</button>
 	</view>
 </view>

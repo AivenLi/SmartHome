@@ -72,13 +72,13 @@
 
 .control-btn {
   margin-top: 10rpx;
-  height: 50rpx;
+  height: 80rpx;
   display: flex;
   align-items: center;
   flex-direction: row;
   justify-content: center;
   border-radius: 20rpx;
-  font-size: 24rpx;
+  font-size: 32rpx;
   color: #ffffff;
 }
 

@@ -7,10 +7,8 @@ Page({
    */
   data: {
 
-    swiperParam: {
-      duration: 300,
-      current: 0,
-    },
+    current: 0,
+    duration: 300,
     tabbar: [
       {
         title: "LED",
@@ -89,19 +87,45 @@ Page({
 
   tabbarClick: function(e) {
 
+console.log(e)
     this.setCurrentTab(e.currentTarget.dataset.index)
   },
 
   swiperChange: function(e) {
 
+console.log(e)
     this.setCurrentTab(e.detail.current)
   },
 
   setCurrentTab: function(index) {
 
-    var current = "swiperParam.current"
     this.setData({
-      [current]: index
+      current: index
     })
+  },
+
+  timingClose: function(e) {
+
+    console.log("定时开启sdfsd")
+    console.log(e)
+  },
+
+  timingOpen: function(e) {
+
+    console.log("定时关闭sdfsdf")
+    console.log(e)
+  },
+
+  timingCancel: function(e) {
+    
+    console.log("取消定时sdfs")
+    console.log(e)
+  },
+
+
+  changeLedStatus: function(e) {
+
+    console.log("改变led")
+    console.log(e)
   }
 })

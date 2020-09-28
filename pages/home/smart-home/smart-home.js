@@ -36,6 +36,20 @@ Page({
    * 页面的初始数据
    */
   data: {
+    /** 当前显示哪个tab */
+    current: 0,
+    /** 切换tab的时间 */
+    duration: 300,
+    /** 两个tab页面 */
+    tabbar: [
+      {
+        title: "LED",
+        index: 0
+      }, {
+        title: "调试",
+        index: 1
+      }
+    ],
     /** 当前连接的ble设备信息（name，deviceId， RSSI） */
     ble: {},
     /** 设备ID，由底层页面传递 */
@@ -465,5 +479,31 @@ Page({
         mIsLoading: false
       })
     }
+  },
+
+  /**
+   * 点击右上方的tab事件
+   */
+  tabbarClick: function (e) {
+
+    this.setCurrentTab(e.currentTarget.dataset.index)
+  },
+
+  /**
+   * 左右滑动切换tab
+   */
+  swiperChange: function (e) {
+
+    this.setCurrentTab(e.detail.current)
+  },
+
+  /**
+   * 设置当前页面
+   */
+  setCurrentTab: function (index) {
+
+    this.setData({
+      current: index
+    })
   }
 })
