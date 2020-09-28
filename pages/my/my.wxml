@@ -12,7 +12,11 @@
 	<swiper class="swiper-class" style="height: 1000rpx;" duration="{{duration}}" current="{{current}}" bindchange="swiperChange" >
 		<swiper-item>
 			<scroll-view scroll-y="{{true}}">
-        <led status="{{true}}" timing="" seconds="321" action="0" bind:timingOpen="timingOpen" bind:timingClose="timingClose" bind:cancelTiming="timingCancel" bind:changLedStatus="changeLedStatus"></led>
+        <led status="{{true}}" timing="" seconds="321" action="0" 
+        bind:timingOpen="timingOpen" 
+        bind:timingClose="timingClose" 
+        bind:cancelTiming="timingCancel" 
+        bind:changeLedStatus="changeLedStatus"></led>
       </scroll-view>
 		</swiper-item>
 		<swiper-item>

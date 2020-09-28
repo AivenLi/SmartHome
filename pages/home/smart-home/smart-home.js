@@ -22,10 +22,20 @@
  *         2. 0000FFF0-0000-1000-8000-00805F9B34FB（各种权限都有，但同一子UUID只有一个权限）
  *         3. 0000FFE0-0000-1000-8000-00805F9B34FB（只有一个子UUID且同时拥有读写、订阅权限，而且和
  *    汇承HC-08文档说明一致）
- *    2020-9-23 00:35:45注：可以发送消息，但是还不能接收消息。
- *    2020-9-24 00:12注：已经可以收发消息。流程如下：
+ *    2020-9-23 00:35:45注：
+ *         可以发送消息，但是还不能接收消息。
+ *    2020-9-24 00:12注：
+ *        已经可以收发消息。流程如下：
  *        wx.getBLEDeviceCharacteristics ==> wx.notifyBLECharacteristicValueChange ==>
  *    wx.readBLECharacteristicValue ==> wx.onBLECharacteristicValueChange
+ *    2020-9-28 22:20:45注：
+ *        点击定时之后不能立即显示倒计时，过了一秒底层回传数据回来才会显示，我在点击事件回调设置了
+ *    但还是不能立即显示，尚不知原因。
+ *    2020-9-28 22:26:37注：
+ *        提莫的，先设置hasTiming后设置timingSeconds不能立刻显示，反过来就可以了。
+ *    2020-9-28 22:32:15注：
+ *        发现更严重的问题，如果快速切换tabbar（swiper实现），然后程序current会疯狂切换导致页面
+ *    也疯狂切换，今天就到这里，我想今天早点睡。^_^
  */
 
 var ledP = require("../../../utils/protocol.js")
@@ -41,15 +51,13 @@ Page({
     /** 切换tab的时间 */
     duration: 300,
     /** 两个tab页面 */
-    tabbar: [
-      {
-        title: "LED",
-        index: 0
-      }, {
-        title: "调试",
-        index: 1
-      }
-    ],
+    tabbar: [{
+      title: "LED",
+      index: 0
+    }, {
+      title: "调试",
+      index: 1
+    }],
     /** 当前连接的ble设备信息（name，deviceId， RSSI） */
     ble: {},
     /** 设备ID，由底层页面传递 */
@@ -76,11 +84,16 @@ Page({
     /** 连接状态 */
     connected: true,
     /*************************************************/
+    /** led状态 */
     ledOn: false,
-    ledOnImg: "../../../images/led_on.png",
-    ledOffImg: "../../../images/led_off.png",
+    /** 是否有定时 */
     hasTiming: false,
+    /** 定时时长 */
     timingSeconds: 0,
+    /** 定时执行的动作 */
+    timingAction: 0,
+    /** 订阅特征值UUID状态 */
+    notifyStatus: false,
   },
 
   /**
@@ -272,6 +285,10 @@ Page({
     }
   },
 
+  /**
+   * 订阅BLE特征值UUID
+   * @param {Number} mIndex 
+   */
   notifyBLE: function (mIndex) {
 
     var that = this
@@ -290,9 +307,15 @@ Page({
         wx.showToast({
           title: '订阅成功',
         })
+        /** 订阅成功，发送查询指令以初始化界面 */
         setTimeout(function () {
           that.sendDataToBLE(ledP.getLedStatus())
-        }, 100)
+        }, 50)
+        setTimeout(function() {
+          that.setData({
+            notifyStatus: true
+          })
+        }, 300)
         that.readDataFromBle()
       },
       fail: err => {
@@ -306,11 +329,17 @@ Page({
             uIndex: that.data.uIndex + 1
           })
           that.notifyBLE(that.data.uIndex)
+        } else {
+
+          that.showToast("无法进行通信")
         }
       }
     })
   },
 
+  /**
+   * 读取BLE特征值
+   */
   readDataFromBle: function () {
 
     var that = this
@@ -333,6 +362,9 @@ Page({
     })
   },
 
+  /**
+   * 监听BLE特征值改变
+   */
   onBLECharaecter: function () {
 
     var that = this
@@ -341,80 +373,82 @@ Page({
       console.log("接受到数据")
       var ledData = ledP.parseData(result.value).split(",");
       console.log(ledData)
-      if (ledData.length == 5 && ledData[0] == "04" && ledData[4] == "08") {
+      if (ledData.length > 0 && ledData.length % 5 == 0) {
 
-        var cmd = ledData[1]
-        if (cmd == "00") {
+        for (let i = 0, len = ledData.length; i < len; i = i + 5) {
 
-          that.setData({
-            ledOn: false
-          })
-        } else if (cmd == "01") {
+          let tempData = []
+          for (let j = i; j < 5 + i; ++j) {
 
-          that.setData({
-            ledOn: true
-          })
-        } else if (cmd == "32" || cmd == "33") {
-
-          var h = parseInt(ledData[2], 16)
-          var l = parseInt(ledData[3], 16)
-          var s = parseInt(( h * 256 + l ))
-          that.setData({
-            timingSeconds: s,
-            hasTiming: true
-          })
-        } else if (cmd == "34") {
-
-          wx.showToast({
-            title: '取消定时任务',
-          })
-          that.setData({
-            hasTiming: false
-          })
+            tempData.push(ledData[j])
+          }
+          that.paramCmdData(tempData)
         }
       }
     })
   },
 
   /**
-   * 改变LED状态
+   * 解析底层回传的数据并作出相应的动作
+   * @param {Array} ledData 数据帧
    */
-  changeLedStatus: function (e) {
+  paramCmdData: function (ledData) {
 
-    var status = !this.data.ledOn;
-    this.setData({
-      ledOn: status
-    })
-    this.sendDataToBLE(ledP.setLedStatus(status))
-  },
+    var that = this
+    console.log("解析数据")
+    console.log(ledData)
+    if (ledData.length == 5 && ledData[0] == "04" && ledData[4] == "08") {
 
-  /**
-   * 开启定时器
-   */
-  startTimingClick: function (e) {
+      var cmd = ledData[1]
+      if (cmd == "00") {
 
-    this.sendDataToBLE(ledP.setTiming(false, 60 * 10))
-    this.setData({
-      hasTiming: true
-    })
-  },
+        that.setData({
+          ledOn: false
+        })
+      } else if (cmd == "01") {
 
-  /**
-   * 取消定时
-   * @param {any} e 
-   */
-  stopTimingClick: function (e) {
+        that.setData({
+          ledOn: true
+        })
+      } else if (cmd == "32" || cmd == "33") {
 
-    this.sendDataToBLE(ledP.cancelTiming())
+        var h = parseInt(ledData[2], 16)
+        var l = parseInt(ledData[3], 16)
+        var s = parseInt((h * 256 + l))
+        if (s == 0) {
+
+          that.setData({
+            hasTiming: false
+          })
+        } else {
+
+          that.setData({
+            timingSeconds: s,
+            hasTiming: true
+          })
+        }
+      } else if (cmd == "34") {
+
+        wx.showToast({
+          title: '取消定时任务',
+        })
+        that.setData({
+          hasTiming: false
+        })
+      }
+    }
   },
 
   /**
    * 发送数据给蓝牙设备
+   * @param {ArrayBuffer} ledProtocolData 控制协议数组
    */
   sendDataToBLE: function (ledProtocolData) {
 
     var that = this
     var uIndex = that.data.uIndex
+    console.log("发送数据")
+    console.log(ledProtocolData)
     wx.writeBLECharacteristicValue({
       characteristicId: that.data.groupUUID[uIndex].CUUID,
       deviceId: that.data.ble.deviceId,
@@ -483,27 +517,90 @@ Page({
 
   /**
    * 点击右上方的tab事件
+   * @param {Event} e
    */
   tabbarClick: function (e) {
 
+    console.log("点击切换")
     this.setCurrentTab(e.currentTarget.dataset.index)
   },
 
   /**
    * 左右滑动切换tab
+   * @param {Event} e
    */
   swiperChange: function (e) {
 
+    console.log("滑动切换")
     this.setCurrentTab(e.detail.current)
   },
 
   /**
    * 设置当前页面
+   * @param {Number} index 第几页
    */
   setCurrentTab: function (index) {
 
     this.setData({
       current: index
+    })
+  },
+
+  /**
+   * 定时关闭回调
+   * @param {Event} e 
+   */
+  timingClose: function (e) {
+
+    console.log("定时开启sdfsd")
+    console.log(e)
+    this.setData({
+      timingAction: 0,
+      timingSeconds: parseInt(e.detail.seconds),
+      hasTiming: true,
+    })
+    this.sendDataToBLE(ledP.setTiming(0, e.detail.seconds))
+  },
+
+  /**
+   * 定时开启回调
+   * @param {Event} e 
+   */
+  timingOpen: function (e) {
+
+    console.log("定时关闭sdfsdf")
+    console.log(e)
+    this.setData({
+      timingAction: 1,
+      timingSeconds: parseInt(e.detail.seconds),
+      hasTiming: true,
+    })
+    this.sendDataToBLE(ledP.setTiming(1, e.detail.seconds))
+  },
+
+  /**
+   * 取消定时回调
+   * @param {Event} e 
+   */
+  timingCancel: function (e) {
+
+    console.log("取消定时sdfs")
+    this.setData({
+      hasTiming: false
+    })
+    this.sendDataToBLE(ledP.cancelTiming())
+  },
+
+  /**
+   * 改变LED状态回调
+   * @param {Event} e 
+   */
+  changeLedStatus: function (e) {
+
+    console.log("改变LED回调")
+    this.sendDataToBLE(ledP.setLedStatus(!this.data.ledOn))
+    this.setData({
+      ledOn: !this.data.ledOn
     })
   }
 })

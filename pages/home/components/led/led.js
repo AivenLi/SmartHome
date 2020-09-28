@@ -99,7 +99,7 @@ Component({
         }, {
           time: "17时",
           index: 17
-        }, {
+        }/*, {
           time: "18时",
           index: 18
         }, {
@@ -192,7 +192,7 @@ Component({
         }, {
           time: "48时",
           index: 48
-        }
+        }*/ /** 根据计算，2字节的数据最多可以定时65535秒 = 18小时12分5秒种*/
       ], [
         { time: "0分", index: 0 }, { time: "1分", index: 1 }, { time: "2分", index: 2 }, { time: "3分", index: 3 }, { time: "4分", index: 4 }, { time: "5分", index: 5 }, { time: "6分", index: 6 }, { time: "7分", index: 7 }, { time: "8分", index: 8 }, { time: "9分", index: 9 }, { time: "10分", index: 10 }, { time: "11分", index: 11 }, { time: "12分", index: 12 }, { time: "13分", index: 13 }, { time: "14分", index: 14 }, { time: "15分", index: 15 }, { time: "16分", index: 16 }, { time: "17分", index: 17 }, { time: "18分", index: 18 }, { time: "19分", index: 19 }, { time: "20分", index: 20 }, { time: "21分", index: 21 }, { time: "22分", index: 22 }, { time: "23分", index: 23 }, { time: "24分", index: 24 }, { time: "25分", index: 25 }, { time: "26分", index: 26 }, { time: "27分", index: 27 }, { time: "28分", index: 28 }, { time: "29分", index: 29 }, { time: "30分", index: 30 }, { time: "31分", index: 31 }, { time: "32分", index: 32 }, { time: "33分", index: 33 }, { time: "34分", index: 34 }, { time: "35分", index: 35 }, { time: "36分", index: 36 }, { time: "37分", index: 37 }, { time: "38分", index: 38 }, { time: "39分", index: 39 }, { time: "40分", index: 40 }, { time: "41分", index: 41 }, { time: "42分", index: 42 }, { time: "43分", index: 43 }, { time: "44分", index: 44 }, { time: "45分", index: 45 }, { time: "46分", index: 46 }, { time: "47分", index: 47 }, { time: "48分", index: 48 }, { time: "49分", index: 49 }, { time: "50分", index: 50 }, { time: "51分", index: 51 }, { time: "52分", index: 52 }, { time: "53分", index: 54 }, { time: "55分", index: 55 }, { time: "56分", index: 56 }, { time: "57分", index: 57 }, { time: "58分", index: 58 }, { time: "59分", index: 59 }
       ], [
@@ -208,38 +208,75 @@ Component({
    */
   methods: {
 
+    /**
+     * 改变LED状态
+     * @param {Event} e 
+     */
     ledStatusChange: function(e) {
 
-      this.triggerEvent('changeLedStatus', protocol.setLedStatus(!this.properties.status))
+      this.triggerEvent('changeLedStatus')
     },
 
+    /**
+     * 设置定时关闭
+     * @param {Event} e 
+     */
     selectClosePicker: function(e) {
 
-      console.log("关灯定时时间: ", e.detail.value)
+      var seconds = this.getSeconds(e.detail.value)
       this.setData({
         timeClose: e.detail.value
       })
-      this.triggerEvent("timingClose")
+      this.triggerEvent("timingClose", {seconds})
     },
 
+    /**
+     * 设置定时开启
+     * @param {Event} e 
+     */
     selectOpenPicker: function(e) {
 
-      console.log("开灯定时时间: ", e.detail.value)
+      var seconds = this.getSeconds(e.detail.value)
       this.setData({
         timeOpen: e.detail.value
       })
-      this.triggerEvent("timingOpen")
+      this.triggerEvent("timingOpen", {seconds})
     },
 
+    /**
+     * 取消定时
+     * @param {Event} e 
+     */
     stopTimingClick: function(e) {
 
-      console.log("取消定时")
       this.triggerEvent("timingCancel")
     },
-  },
 
-  ledStatusChange: function(e) {
+    /**
+     * 改变LED状态
+     * @param {Event} e 
+     */
+    ledStatusChange: function(e) {
 
-    this.triggerEvent("changeLedStatus", protocol.mySetLedStatus(this.properties.status))
+      this.triggerEvent("changeLedStatus", protocol.setLedStatus(this.properties.status))
+    },
+  
+    /**
+     * 将时分秒转化为秒
+     * @param {Array} array picker中的三列数值（时分秒）
+     * @returns seconds
+     */
+    getSeconds: function(hms) {
+  
+      let s = parseInt(hms[0]) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2])
+      /**
+       * 由于底层bug，定时设置时长为0s时会导致溢出，故在此控制定时时长最短为1s。
+       */
+      if ( s <= 0 ) {
+
+        s = 1
+      }
+      return s
+    }
   }
 })

@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "详情页",
-  "usingComponents": {}
+  "usingComponents": {
+    "led": "../components/led/led",
+    "debug": "../components/debug/debug"
+  }
 }

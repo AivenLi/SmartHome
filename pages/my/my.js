@@ -9,15 +9,13 @@ Page({
 
     current: 0,
     duration: 300,
-    tabbar: [
-      {
-        title: "LED",
-        index: 0
-      }, {
-        title: "调试",
-        index: 1
-      }
-    ],
+    tabbar: [{
+      title: "LED",
+      index: 0
+    }, {
+      title: "调试",
+      index: 1
+    }],
     clientHeight: 0,
   },
 
@@ -25,15 +23,15 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function (options) {
-/*
-    var that = this
-    wx.getSystemInfo({
-      success: function (res) {
-        that.setData({
-          clientHeight: res.windowHeight - 177
-        })
-      },
-    })*/
+    /*
+        var that = this
+        wx.getSystemInfo({
+          success: function (res) {
+            that.setData({
+              clientHeight: res.windowHeight - 177
+            })
+          },
+        })*/
   },
 
   /**
@@ -85,47 +83,22 @@ Page({
 
   },
 
-  tabbarClick: function(e) {
+  tabbarClick: function (e) {
 
-console.log(e)
+    console.log(e)
     this.setCurrentTab(e.currentTarget.dataset.index)
   },
 
-  swiperChange: function(e) {
+  swiperChange: function (e) {
 
-console.log(e)
+    console.log(e)
     this.setCurrentTab(e.detail.current)
   },
 
-  setCurrentTab: function(index) {
+  setCurrentTab: function (index) {
 
     this.setData({
       current: index
     })
   },
-
-  timingClose: function(e) {
-
-    console.log("定时开启sdfsd")
-    console.log(e)
-  },
-
-  timingOpen: function(e) {
-
-    console.log("定时关闭sdfsdf")
-    console.log(e)
-  },
-
-  timingCancel: function(e) {
-    
-    console.log("取消定时sdfs")
-    console.log(e)
-  },
-
-
-  changeLedStatus: function(e) {
-
-    console.log("改变led")
-    console.log(e)
-  }
 })

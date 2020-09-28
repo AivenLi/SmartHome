@@ -160,7 +160,9 @@ Page({
     console.log("搜索蓝牙")
     var that = this
     wx.startBluetoothDevicesDiscovery({
-
+      /**
+       * 根据UUID搜索会提高效率，该功能在后期提供筛选，目前先这样。
+       */
       //services: ['FFF0'],
       /** 允许上报同一设备，主要用于更新设备的RSSI */
       allowDuplicatesKey: true,

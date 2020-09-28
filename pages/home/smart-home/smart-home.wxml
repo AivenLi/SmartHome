@@ -2,7 +2,7 @@
 
 <wxs module="hexUtil" src="../../../utils/filter.wxs"/>
 
-<view class="page-head">
+<view wx:if="{{notifyStatus}}" class="page-head">
   <view class="tabbar">
     <block wx:for="{{tabbar}}" wx:key="index">
       <view class="tabbar-item" bindtap="tabbarClick" data-index="{{item.index}}">
@@ -14,7 +14,11 @@
 	<swiper class="swiper-class" style="height: 1000rpx;" duration="{{duration}}" current="{{current}}" bindchange="swiperChange" >
 		<swiper-item>
 			<scroll-view scroll-y="{{true}}">
-        <led status="" timing="" seconds="321" action="0"></led>
+        <led status="{{ledOn}}" timing="{{hasTiming}}" seconds="{{timingSeconds}}" action="{{timingAction}}" 
+        bind:timingOpen="timingOpen" 
+        bind:timingClose="timingClose" 
+        bind:timingCancel="timingCancel" 
+        bind:changeLedStatus="changeLedStatus"></led>
       </scroll-view>
 		</swiper-item>
 		<swiper-item>

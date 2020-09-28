@@ -12,6 +12,7 @@ dataView.setUint8(3, 0)
 dataView.setUint8(4, 8)
 
 /**
+ * 设置LED状态
  * @param {boolean} status led的状态，true亮，false灭
  * @return led的控制协议数据
  */
@@ -25,31 +26,34 @@ function mySetLedStatus(status) {
 
 /**
  * @brief 设置定时器
- * @param {boolean} status 定时到之后的动作
- * @param {number} timing 定时时长
+ * @param {Number} status 定时到之后的动作。1：开，0：关
+ * @param {Number} timing 定时时长
  */
-function mySetTimingCloseLed(status, timing) {
+function mySetTimingLed(status, timing) {
 
   let hightBit = 0
   let lowBit   = 0
-  if (timing > 65535) {
+  
+  console.log("定时时间: ", timing)
+  if (timing >= 65535) {
 
     hightBit = lowBit = 255
-  } else if ( timing > 255 ) {
-
-    lowBit   = 255
-    hightBit = parseInt(timing / 256) + ( timing % 256 )
   } else if ( timing <= 0 ) {
 
     hightBit = lowBit = 0
+  } else if ( timing <= 255 ) {
+   
+    lowBit = timing
   } else {
 
-    lowBit   = timing
-    hightBit = 0
+    hightBit = parseInt(timing / 256)
+    lowBit = parseInt(timing % 256)
   }
-  dataView.setUint8(1, status ? 51 : 50)
-  dataView.setUint8(2, 7);
-  dataView.setUint8(3, 8);
+  console.log("高位：", hightBit)
+  console.log("低位: ", lowBit)
+  dataView.setUint8(1, status == 1 ? 51 : 50)
+  dataView.setUint8(2, hightBit);
+  dataView.setUint8(3, lowBit);
   return ledProtocol
 }
 
@@ -64,6 +68,9 @@ function myCancelTiming() {
   return ledProtocol;
 }
 
+/**
+ * 设置LED状态
+ */
 function myGetLedStatus() {
 
   dataView.setUint8(1, 53)
@@ -72,11 +79,20 @@ function myGetLedStatus() {
   return ledProtocol
 }
 
+/**
+ * 解析底层回传的数据
+ * @param {ArrayBuffer} buffer 
+ */
 function parseLedProtocolData(buffer) {
 
   return dataTohex(buffer)
 }
 
+/**
+ * 十进制转16进制
+ * @param {ArrayBuffer} buffer 存放十进制的ArrayBuffer
+ * @params List字符串
+ */
 function dataTohex(buffer) {
 
   let hexArr = Array.prototype.map.call(
@@ -92,7 +108,7 @@ module.exports = {
 
   setLedStatus: mySetLedStatus,
   getLedStatus: myGetLedStatus,
-  setTiming: mySetTimingCloseLed,
+  setTiming: mySetTimingLed,
   cancelTiming: myCancelTiming,
   parseData: parseLedProtocolData,
 }
