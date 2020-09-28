@@ -415,6 +415,7 @@ Page({
         var h = parseInt(ledData[2], 16)
         var l = parseInt(ledData[3], 16)
         var s = parseInt((h * 256 + l))
+        var action = cmd == "32" ? 0 : 1
         if (s == 0) {
 
           that.setData({
@@ -423,8 +424,9 @@ Page({
         } else {
 
           that.setData({
+            timingAction: action, 
             timingSeconds: s,
-            hasTiming: true
+            hasTiming: true,
           })
         }
       } else if (cmd == "34") {
