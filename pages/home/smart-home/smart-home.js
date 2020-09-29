@@ -416,6 +416,7 @@ Page({
         var l = parseInt(ledData[3], 16)
         var s = parseInt((h * 256 + l))
         var action = cmd == "32" ? 0 : 1
+        console.log("开灯定时", action)
         if (s == 0) {
 
           that.setData({

@@ -268,15 +268,7 @@ Component({
      */
     getSeconds: function(hms) {
   
-      let s = parseInt(hms[0]) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2])
-      /**
-       * 由于底层bug，定时设置时长为0s时会导致溢出，故在此控制定时时长最短为1s。
-       */
-      if ( s <= 0 ) {
-
-        s = 1
-      }
-      return s
+      return parseInt(hms[0]) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2])
     }
   }
 })
