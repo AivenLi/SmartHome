@@ -1,2 +1,36 @@
 <!--pages/home/components/debug/debug.wxml-->
-<text>pages/home/components/debug/debug.wxml</text>
+<view class="debug-hd">
+	<view class="receive-bd">
+		<block wx:for="{{receive}}" wx:key="value">
+			<text class="receive-text">{{item.value}}</text>
+		</block>
+	</view>
+	<view class="clear-bd">
+		<view class="clear-receive-text" catchtap="clearReceiveClick">清空接收区</view>
+	</view>
+	<view class="hex-rece-send-show">
+		<view class="hex-send-show">HEX显示</view>
+		<switch checked="" bindchange="hexShowChange" />
+	</view>
+	<view class="hex-rece-send-show">
+		<view class="hex-send-show">HEX发送</view>
+		<switch checked="" bindchange="hexSendChange" />
+	</view>
+	<view class="editor-hd">
+		<textarea class="send-text" placeholder="在此输入要发送的内容" bindinput="inputChange" value="{{sendDataShow}}" disabled="{{hexSend}}" />
+		<view wx:if="{{hexSend}}" class="hex-keyboard">
+			<block wx:for="{{hexArr}}" wx:key="index">
+				<view class="key-item" catchtap="hexInputChange" data-index="{{index}}">{{item}}</view>
+			</block>
+		</view>
+		<view wx:if="{{hexSend}}" class="hex-keyboard-back" catchtap="hexInputBack">退格</view>
+		<view class="send-opt">
+      <view class="clear-send-text" catchtap="clearSendClick">清空发送区</view>
+			<view wx:if="{{timingSend}}" class="timing-send-data-btn" style="border-color: #585858;color:#585858;" catchtap="closeTimingSendDataClick">关闭定时</view>
+			<picker wx:if="{{!timingSend}}" mode="selector" bindchange="timingSendDataClick" value="{{defaultTiming}}" range="{{timer}}" range-key="time">
+				<view class="timing-send-data-btn" style="border-color: #00bfff;color: #00bfff;">定时发送</view>
+			</picker>
+      <view class="send-btn" catchtap="sendDataClick">发送</view>
+    </view>
+  </view>
+</view>
